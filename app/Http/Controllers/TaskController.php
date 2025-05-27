@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Task;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class TaskController extends Controller
 {
     public function addTask()
     {
+        Cache::forget("task-list-key");
         return view("add-task");
     }
 
@@ -24,7 +27,13 @@ class TaskController extends Controller
 
     public function taskList()
     {
-        $tasks = Task::all();
+        // $tasks = Task::all();
+        $tasks = Cache::remember('task-list-key', 30000, function () {
+            Log::info('Data is coming from Database!!');
+            return Task::all();
+        });
+
+        Log::info('Data is coming from either Cache or from Database');
         return view('task-list', ['tasks' => $tasks]);
     }
 
@@ -39,6 +48,7 @@ class TaskController extends Controller
             "title" => "required",
             "task" => "required",
         ]);
+        Cache::forget("task-list-key");
         $task->title = $incomingFields['title'];
         $task->task = $incomingFields['task'];
         $task->save();
@@ -48,6 +58,7 @@ class TaskController extends Controller
     public function deleteTask(Task $task)
     {
         $task->delete();
+        Cache::forget("task-list-key");
         return redirect("/task-list");
     }
 }
