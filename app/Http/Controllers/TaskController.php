@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Task;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use App\Mail\SendMail;
+use Illuminate\Support\Facades\Mail;
 
 class TaskController extends Controller
 {
@@ -22,6 +24,7 @@ class TaskController extends Controller
             "task" => "required"
         ]);
         Task::create($incomingFields);
+        Mail::to("pritomsaha17010@gmail.com")->queue(new SendMail($request->title, $request->task));
         return redirect('/home');
     }
 
